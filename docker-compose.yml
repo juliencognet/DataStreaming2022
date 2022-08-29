@@ -1,0 +1,149 @@
+version: '3'
+
+networks:
+  app-tier:
+    name: talk-streaming-network
+
+services:
+  datareference:
+      image: postgres:14.3
+      container_name: datareference
+      ports:
+        - "5432:5432"
+      environment:
+        - POSTGRES_PASSWORD=password
+        - POSTGRES_USER=postgres
+        - POSTGRES_DB=referencedata
+      volumes:
+        - "./postgresql/input_postgresql-docker-entrypoint-initdb.d/:/docker-entrypoint-initdb.d/"
+      networks:
+        - app-tier
+  zookeeper:
+    image: 'bitnami/zookeeper:latest'
+    container_name: zookeeper
+    networks:
+      - app-tier
+    environment:
+      - "ALLOW_ANONYMOUS_LOGIN=yes"
+  kafka:
+    image: 'bitnami/kafka:latest'
+    container_name: kafka
+    ports:
+      - '9092:9092'
+      - '9093:9093'
+    depends_on:
+      - zookeeper      
+    networks:
+      - app-tier
+    environment:
+      - "ALLOW_PLAINTEXT_LISTENER=yes"
+      - "KAFKA_CFG_LISTENERS=PLAINTEXT://:9092"
+      - "KAFKA_CFG_ADVERTISED_LISTENERS=PLAINTEXT://kafka:9092"
+      - "KAFKA_CFG_ZOOKEEPER_CONNECT=zookeeper:2181"
+      - "KAFKA_CREATE_TOPICS=example-topic:1:1"
+
+  kafdrop:
+    image: obsidiandynamics/kafdrop
+    container_name: kafdrop
+    restart: "no"
+    ports:
+      - "9000:9000"
+    networks:
+      - app-tier
+    environment:
+      KAFKA_BROKERCONNECT: "kafka:9092"
+    depends_on:
+      - kafka
+
+  nifi:
+    image: apache/nifi:1.17.0
+    container_name: nifi
+    ports:
+      - "8888:8080"
+      - "8443:8443"
+    environment:
+      - "SINGLE_USER_CREDENTIALS_USERNAME=admin"
+      - "SINGLE_USER_CREDENTIALS_PASSWORD=ctsBtRBKHRAx69EqUghvvgEvjnaLjFEB"
+    networks:
+      - app-tier
+  
+# nifi2:
+#   image: apache/nifi:1.17.0
+#   container_name: nifi2
+#   ports:
+#     - "8889:8080"
+#     - "8444:8444"
+#   environment:
+#     - "SINGLE_USER_CREDENTIALS_USERNAME=admin"
+#     - "SINGLE_USER_CREDENTIALS_PASSWORD=ctsBtRBKHRAx69EqUghvvgEvjnaLjFEB"
+#     - "NIFI_WEB_HTTPS_PORT=8444"
+#   networks:
+#     - app-tier
+  
+  nifi-registry:
+    image: apache/nifi-registry:1.17.0
+    container_name: nifi-registry
+    ports:
+      - "18080:18080"
+    networks:
+      - app-tier
+    volumes:
+      - ./nifiRegistry/flow-storage:/opt/nifi-registry/nifi-registry-current/flow_storage
+      - ./nifiRegistry/database:/opt/nifi-registry/nifi-registry-current/database
+  
+  flink-jobmanager:
+    build:
+      context: ./flink
+    ports:
+      - "8085:8081"
+    command: jobmanager
+    container_name: flink-jobmanager
+    networks:
+      - app-tier    
+    environment:
+      - |
+        FLINK_PROPERTIES=
+        jobmanager.rpc.address: flink-jobmanager        
+
+  flink-taskmanager:
+    build:
+      context: ./flink
+    depends_on:
+      - flink-jobmanager
+    command: taskmanager
+    container_name: flink-taskmanager
+    scale: 1
+    networks:
+      - app-tier    
+    environment:
+      - |
+        FLINK_PROPERTIES=
+        jobmanager.rpc.address: flink-jobmanager
+        taskmanager.numberOfTaskSlots: 10
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.6.0
+    container_name: elasticsearch
+    environment:
+      - cluster.name=docker-cluster
+      - bootstrap.memory_lock=true
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+      - discovery.type=single-node
+    ports:
+      - "9200:9200"
+      - "9300:9300"
+    networks:
+      - app-tier   
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+      nofile:
+        soft: 65536
+        hard: 65536
+  kibana:
+    image: docker.elastic.co/kibana/kibana:7.6.0
+    container_name: kibana
+    ports:
+      - "5601:5601"
+    networks:
+      - app-tier
