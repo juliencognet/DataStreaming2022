@@ -61,6 +61,8 @@ services:
     ports:
       - "8888:8080"
       - "8443:8443"
+    volumes:
+      - "./nifi/lib/:/usr/lib/postgres"      
     environment:
       - "SINGLE_USER_CREDENTIALS_USERNAME=admin"
       - "SINGLE_USER_CREDENTIALS_PASSWORD=ctsBtRBKHRAx69EqUghvvgEvjnaLjFEB"
@@ -100,6 +102,8 @@ services:
     container_name: flink-jobmanager
     networks:
       - app-tier    
+    volumes:
+      - "./flink/dataStreamJavaApiDemo/target:/home/jars"
     environment:
       - |
         FLINK_PROPERTIES=
