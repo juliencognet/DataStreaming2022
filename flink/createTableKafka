@@ -1,14 +1,18 @@
 Administration Nifi: https://localhost:8443/nifi/
-KafDrop: https://localhost:8443/nifi/
+
+KafDrop: http://localhost:9000/
 Flink: http://localhost:8085/
 Kibana: http://localhost:5601/ (bien penser à ajouter le remote cluster elasticsearch:5300)
 
 
 
 
-docker exec -ti flink-jobmanager sql-client.sh
+docker exec -ti flink-jobmanager sql-client.sh -f /usr/local/flink/createFlinkSqlJob.sql
 
+DROP TABLE MeterWithDataReference;
 DROP TABLE KafkaTable;
+DROP TABLE MeterReference;
+
 CREATE TABLE KafkaTable (
   `meterId` STRING,
   `meterValue` STRING,
@@ -28,6 +32,45 @@ CREATE TABLE KafkaTable (
   'json.ignore-parse-errors' = 'true'
 );
 
+CREATE TABLE MeterReference (
+  ID_METER STRING,
+  METER_NAME STRING
+) WITH (
+   'connector' = 'jdbc',
+   'url' = 'jdbc:postgresql://datareference:5432/referencedata',
+   'username' = 'postgres',
+   'password' = 'password', 
+   'table-name' = 'METER'
+);
+
+SELECT k.meterId, k.corrMeterValue, r.METER_NAME, k.ts
+FROM KafkaTable k 
+LEFT JOIN MeterReference r ON k.meterId = r.ID_METER;
+
+
+CREATE TABLE MeterWithDataReference (
+  `meterId` STRING PRIMARY KEY,
+  corrMeterValue DOUBLE,
+  `meterName` STRING,
+  ts TIMESTAMP
+) WITH (
+  'connector' = 'upsert-kafka',
+  'topic' = 'meter-with-reference-data-topic',
+  'properties.bootstrap.servers' = 'kafka:9092',
+  'properties.group.id' = 'testGroup',
+  'key.format' = 'json',
+  'value.format' = 'json'
+);
+
+INSERT INTO MeterWithDataReference
+SELECT k.meterId, k.corrMeterValue, r.METER_NAME, k.ts
+FROM KafkaTable k 
+LEFT JOIN MeterReference r ON k.meterId = r.ID_METER;
+
+
+
+-----------------------------
+
 DROP TABLE meterValuesElastic;
 CREATE TABLE meterValuesElastic (
     `meterId` STRING,
@@ -46,20 +89,6 @@ select meterId
 from KafkaTable
 GROUP BY meterId, TUMBLE(ts, INTERVAL '1' MINUTE);
 
-CREATE TABLE MeterReference (
-  ID_METER STRING,
-  METER_NAME STRING
-) WITH (
-   'connector' = 'jdbc',
-   'url' = 'jdbc:postgresql://datareference:5432/referencedata',
-   'username' = 'postgres',
-   'password' = 'password', 
-   'table-name' = 'METER'
-);
-
-SELECT k.meterId, k.corrMeterValue, r.METER_NAME
-FROM KafkaTable k 
-LEFT JOIN MeterReference r ON k.meterId = r.ID_METER;
 
 -------------------------------
 

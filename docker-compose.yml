@@ -62,7 +62,7 @@ services:
       - "8888:8080"
       - "8443:8443"
     volumes:
-      - "./nifi/lib/:/usr/lib/postgres"      
+      - "./nifi/lib/:/usr/lib/postgres"
     environment:
       - "SINGLE_USER_CREDENTIALS_USERNAME=admin"
       - "SINGLE_USER_CREDENTIALS_PASSWORD=ctsBtRBKHRAx69EqUghvvgEvjnaLjFEB"
@@ -104,6 +104,7 @@ services:
       - app-tier    
     volumes:
       - "./flink/dataStreamJavaApiDemo/target:/home/jars"
+      - ./flink/table_api:/usr/local/flink
     environment:
       - |
         FLINK_PROPERTIES=
@@ -124,30 +125,3 @@ services:
         FLINK_PROPERTIES=
         jobmanager.rpc.address: flink-jobmanager
         taskmanager.numberOfTaskSlots: 10
-  elasticsearch:
-    image: docker.elastic.co/elasticsearch/elasticsearch:7.6.0
-    container_name: elasticsearch
-    environment:
-      - cluster.name=docker-cluster
-      - bootstrap.memory_lock=true
-      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
-      - discovery.type=single-node
-    ports:
-      - "9200:9200"
-      - "9300:9300"
-    networks:
-      - app-tier   
-    ulimits:
-      memlock:
-        soft: -1
-        hard: -1
-      nofile:
-        soft: 65536
-        hard: 65536
-  kibana:
-    image: docker.elastic.co/kibana/kibana:7.6.0
-    container_name: kibana
-    ports:
-      - "5601:5601"
-    networks:
-      - app-tier
