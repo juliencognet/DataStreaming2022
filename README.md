@@ -31,7 +31,7 @@ stop.sh
 
 IHM d'administration
 ----
-Administration Nifi: https://localhost:8443/nifi/
-KafDrop: http://localhost:9000/
-Flink: http://localhost:8085/
-Kibana: http://localhost:5601/ (bien penser à ajouter le remote cluster elasticsearch:5300)
+- Administration Nifi: https://localhost:8443/nifi/
+- KafDrop: http://localhost:9000/
+- Flink: http://localhost:8085/
+- Kibana: http://localhost:5601/ (bien penser à ajouter le remote cluster elasticsearch:5300)
