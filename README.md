@@ -11,22 +11,27 @@ Il se présente sous la forme d'un projet docker-compose qui lance plusieurs com
   - l'autre permettant d'implémenter un change data capture
 - Un registre Nifi (nifi-registry)
 - Un cluster Apache Flink qui implémente un traitement métier simple
-- Un Elasticsearch permettant de recueillir les données traitées par Flink
-- Kibana pour visualiser le contenu d'Elasticsearch
 
 
 Pour lancer le projet:
 ----
 
 ```
-docker-compose up -d
+startup.sh
 ```
+
 - Ensuite, il faut paramétrer le registre nifi : http://nifi-registry:18080 
 - Importer les 2 process groupes de chargement de données et CDC.
 
 Pour arrêter les composants:
 ----
 ```
-docker-compose stop
+stop.sh
 ```
 
+IHM d'administration
+----
+Administration Nifi: https://localhost:8443/nifi/
+KafDrop: http://localhost:9000/
+Flink: http://localhost:8085/
+Kibana: http://localhost:5601/ (bien penser à ajouter le remote cluster elasticsearch:5300)
