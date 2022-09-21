@@ -18,11 +18,14 @@
 
 package com.cgi.datastream.conference;
 
+import com.cgi.datastream.conference.kafka_serialization.MeterValueWithReferenceDataKeySerializer;
+import com.cgi.datastream.conference.kafka_serialization.MeterValueWithReferenceDataValueSerializer;
+import com.cgi.datastream.conference.operations.DeserializeMeter;
+import com.cgi.datastream.conference.operations.DeserializeMeterValue;
+import com.cgi.datastream.conference.operations.JoinMeterReferenceAndMeterValues;
 import org.apache.flink.api.common.eventtime.WatermarkStrategy;
-import org.apache.flink.api.common.functions.MapFunction;
 import org.apache.flink.api.common.restartstrategy.RestartStrategies;
 import org.apache.flink.api.common.serialization.SimpleStringSchema;
-import org.apache.flink.api.common.time.Time;
 import org.apache.flink.connector.base.DeliveryGuarantee;
 import org.apache.flink.connector.kafka.sink.KafkaRecordSerializationSchema;
 import org.apache.flink.connector.kafka.sink.KafkaSink;
@@ -32,12 +35,6 @@ import org.apache.flink.shaded.jackson2.com.fasterxml.jackson.databind.ObjectMap
 import org.apache.flink.streaming.api.datastream.DataStreamSource;
 import org.apache.flink.streaming.api.datastream.SingleOutputStreamOperator;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
-import org.apache.flink.streaming.api.functions.co.CoFlatMapFunction;
-import org.apache.flink.util.Collector;
-
-import java.time.temporal.ChronoUnit;
-import java.util.ArrayList;
-import java.util.HashMap;
 
 /**
  * Skeleton for a Flink DataStream Job.
@@ -61,70 +58,50 @@ public class DataStreamJob {
 		String brokers = "kafka:9092";
 		ObjectMapper objectMapper = new ObjectMapper();
 
-		KafkaSource<String> source = KafkaSource.<String>builder()
-				.setBootstrapServers(brokers)
-				.setTopics("test-topic")
-				.setGroupId("flink-group")
-				.setStartingOffsets(OffsetsInitializer.earliest())
-				.setValueOnlyDeserializer(new SimpleStringSchema())
-				.build();
-
-		KafkaSource<String> changeDataCaptureSource = KafkaSource.<String>builder()
-				.setBootstrapServers(brokers)
-				.setTopics("data-reference-changes")
-				.setGroupId("flink-group")
-				.setStartingOffsets(OffsetsInitializer.earliest())
-				.setValueOnlyDeserializer(new SimpleStringSchema())
-				.build();
-
-		KafkaSink<String> sink = KafkaSink.<String>builder()
-				.setBootstrapServers(brokers)
-				.setRecordSerializer(KafkaRecordSerializationSchema.builder()
-						.setTopic("output-topic")
-						.setValueSerializationSchema(new SimpleStringSchema())
-						.build()
-				)
-				.setDeliverGuarantee(DeliveryGuarantee.AT_LEAST_ONCE)
-				.build();
+		KafkaSource<String> source = buildInputKafkaSource(brokers, "input-meter-values");
+		KafkaSource<String> changeDataCaptureSource = buildInputKafkaSource(brokers, "input-data-reference-changes");
+		KafkaSink<MeterValueWithReferenceData> sink = buildOutputKafkaSink(brokers, objectMapper);
 
 		SingleOutputStreamOperator<Meter[]> streamChangeDataCaptureSource =
 				env.fromSource(changeDataCaptureSource, WatermarkStrategy.noWatermarks(), "CDC Kafka Source")
-						.map((MapFunction<String, Meter[]>) s -> objectMapper.readValue(s,Meter[].class));
+						.map(new DeserializeMeter(objectMapper));
 
-		DataStreamSource<String> streamSource =
-				env.fromSource(source, WatermarkStrategy.noWatermarks(), "MeterValues Kafka Source");
-
-		streamSource
-				.map((MapFunction<String, MeterValue>) s -> objectMapper.readValue(s, MeterValue.class))
+		env.fromSource(source, WatermarkStrategy.noWatermarks(), "MeterValues Kafka Source")
+				.map(new DeserializeMeterValue(objectMapper))
 				.connect(streamChangeDataCaptureSource)
-				.flatMap(new CoFlatMapFunction<MeterValue, Meter[], MeterValueWithReferenceData>() {
-
-					final HashMap<String,Meter> meters = new HashMap<>();
-
-					@Override
-					public void flatMap1(MeterValue meterValue, Collector<MeterValueWithReferenceData> collector) {
-						Meter currentMeter = meters.get(meterValue.meterId);
-						MeterValueWithReferenceData meterValueWithReferenceData = new MeterValueWithReferenceData();
-						meterValueWithReferenceData.meterId = currentMeter.idMeter;
-						meterValueWithReferenceData.meterName = currentMeter.meterName;
-						meterValueWithReferenceData.meterTimestamp = meterValue.meterTimestamp;
-						meterValueWithReferenceData.meterValue = meterValue.meterValue;
-						collector.collect(meterValueWithReferenceData);
-					}
-
-					@Override
-					public void flatMap2(Meter[] meter, Collector<MeterValueWithReferenceData> collector) {
-						for (Meter meterElement : meter) {
-							meters.put(meterElement.idMeter,meterElement);
-						}
-					}
-				})
-				.map((MapFunction<MeterValueWithReferenceData, String>) objectMapper::writeValueAsString)
+				.flatMap(new JoinMeterReferenceAndMeterValues())
+				.filter(meterValueWithReferenceData -> meterValueWithReferenceData.building!=null)
+				.keyBy(MeterValueWithReferenceData::getBuilding)
 				.sinkTo(sink);
 
 		// Execute program, beginning computation.
 		env.setRestartStrategy(RestartStrategies.fixedDelayRestart(10, 1000));
 		env.execute("Flink job to enrich meter value from data reference and output to Kafka");
 
+	}
+
+	private static KafkaSink<MeterValueWithReferenceData> buildOutputKafkaSink(String brokers, ObjectMapper objectMapper) {
+		KafkaSink<MeterValueWithReferenceData> sink = KafkaSink.<MeterValueWithReferenceData>builder()
+				.setBootstrapServers(brokers)
+				.setRecordSerializer(KafkaRecordSerializationSchema.<MeterValueWithReferenceData>builder()
+					.setTopic("output-meter-values-with-reference-data-from-stream-api")
+					.setValueSerializationSchema(new MeterValueWithReferenceDataValueSerializer(objectMapper))
+					.setKeySerializationSchema(new MeterValueWithReferenceDataKeySerializer(objectMapper))
+					.build()
+				)
+				.setDeliverGuarantee(DeliveryGuarantee.AT_LEAST_ONCE)
+				.build();
+		return sink;
+	}
+
+	private static KafkaSource<String> buildInputKafkaSource(String brokers, String x) {
+		KafkaSource<String> source = KafkaSource.<String>builder()
+				.setBootstrapServers(brokers)
+				.setTopics(x)
+				.setGroupId("consumer-group-flink-stream-api")
+				.setStartingOffsets(OffsetsInitializer.earliest())
+				.setValueOnlyDeserializer(new SimpleStringSchema())
+				.build();
+		return source;
 	}
 }

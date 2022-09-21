@@ -3,17 +3,64 @@ set -e
 
 psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "$POSTGRES_DB" <<-EOSQL
     CREATE TABLE METER(
-        ID_METER  varchar, METER_NAME  varchar, LAST_UPDATE timestamp 
+        ID_METER  varchar, 
+        MEASURE_TYPE varchar, 
+        UNIT varchar, 
+        BUILDING varchar, 
+        ROOM varchar, 
+        AREA integer, 
+        LAST_UPDATE timestamp 
     );
-    INSERT INTO METER(ID_METER, METER_NAME, LAST_UPDATE) values ('1', 'Meter 1',now());
-    INSERT INTO METER(ID_METER, METER_NAME, LAST_UPDATE) values ('2', 'Meter 2',now());
-    INSERT INTO METER(ID_METER, METER_NAME, LAST_UPDATE) values ('3', 'Meter 3',now());
-    INSERT INTO METER(ID_METER, METER_NAME, LAST_UPDATE) values ('4', 'Meter 4',now());
-    INSERT INTO METER(ID_METER, METER_NAME, LAST_UPDATE) values ('5', 'Meter 5',now());
-    INSERT INTO METER(ID_METER, METER_NAME, LAST_UPDATE) values ('6', 'Meter 6',now());
-    INSERT INTO METER(ID_METER, METER_NAME, LAST_UPDATE) values ('7', 'Meter 7',now());
-    INSERT INTO METER(ID_METER, METER_NAME, LAST_UPDATE) values ('8', 'Meter 8',now());
-    INSERT INTO METER(ID_METER, METER_NAME, LAST_UPDATE) values ('9', 'Meter 9',now());
-    INSERT INTO METER(ID_METER, METER_NAME, LAST_UPDATE) values ('10', 'Meter 10',now());
-    
+    INSERT INTO METER(ID_METER, MEASURE_TYPE, UNIT, BUILDING, ROOM, AREA, LAST_UPDATE) 
+      VALUES ('1', 'ELECTRIC', 'kWh', 'Imprimerie de la Banque de France', 'Accueil', 250 ,now()),
+      ('2', 'ELECTRIC', 'kWh', 'Imprimerie de la Banque de France', 'Bureau Président BdF', 500 ,now()),
+      ('3', 'ELECTRIC', 'kWh', 'Imprimerie de la Banque de France', 'Secrétariat', 600 ,now()),
+      ('4', 'ELECTRIC', 'kWh', 'Imprimerie de la Banque de France', 'Salle de vérification', 700 ,now()),
+      ('5', 'ELECTRIC', 'kWh', 'Imprimerie de la Banque de France', 'Salle des imprimantes', 1200 ,now()),
+      ('6', 'ELECTRIC', 'kWh', 'Imprimerie de la Banque de France', 'Accueil', 250 ,now()),
+      ('7', 'ELECTRIC', 'kWh', 'Imprimerie de la Banque de France', 'Bureau Président BdF', 500 ,now()),
+      ('8', 'ELECTRIC', 'kWh', 'Imprimerie de la Banque de France', 'Secrétariat', 600 ,now()),
+      ('9', 'ELECTRIC', 'kWh', 'Imprimerie de la Banque de France', 'Salle de vérification', 700 ,now()),
+      ('10', 'ELECTRIC', 'kWh', 'Imprimerie de la Banque de France', 'Salle des imprimantes', 1200 ,now()),      
+      ('11', 'ELECTRIC', 'kWh', 'Tour des Liondards', 'Sous-sol', 600 ,now()),
+      ('12', 'ELECTRIC', 'kWh', 'Tour des Liondards', 'Etage 1', 600 ,now()),
+      ('13', 'ELECTRIC', 'kWh', 'Tour des Liondards', 'Etage 2', 600 ,now()),
+      ('14', 'ELECTRIC', 'kWh', 'Tour des Liondards', 'Etage 3', 600 ,now()),
+      ('15', 'ELECTRIC', 'kWh', 'Tour des Liondards', 'Etage 4', 600 ,now()),
+      ('16', 'ELECTRIC', 'kWh', 'Tour des Liondards', 'Etage 5', 600 ,now()),
+      ('17', 'ELECTRIC', 'kWh', 'Tour des Liondards', 'Etage 6', 600 ,now()),
+      ('18', 'ELECTRIC', 'kWh', 'Tour des Liondards', 'Etage 7', 600 ,now()),
+      ('19', 'ELECTRIC', 'kWh', 'Tour des Liondards', 'Etage 8', 600 ,now()),
+      ('20', 'ELECTRIC', 'kWh', 'Tour des Liondards', 'Etage 9', 600 ,now()),
+      ('21', 'ELECTRIC', 'kWh', 'Tour des Liondards', 'Etage 10', 600 ,now()),
+      ('22', 'ELECTRIC', 'kWh', 'Tour des Liondards', 'Etage 11', 600 ,now()),
+      ('23', 'ELECTRIC', 'kWh', 'Tour des Liondards', 'Etage 12', 600 ,now()),            
+      ('24', 'ELECTRIC', 'kWh', 'Tour des Liondards', 'Etage 13', 600 ,now()),
+      ('25', 'ELECTRIC', 'kWh', 'Tour des Liondards', 'Etage 14', 600 ,now()),
+      ('26', 'ELECTRIC', 'kWh', 'Tour des Liondards', 'Etage 15', 600 ,now()),
+      ('27', 'ELECTRIC', 'kWh', 'Tour des Liondards', 'Etage 16', 600 ,now()),
+      ('28', 'ELECTRIC', 'kWh', 'Tour des Liondards', 'Etage 17', 600 ,now()),
+      ('29', 'ELECTRIC', 'kWh', 'Tour des Liondards', 'Etage 18', 600 ,now()),
+      ('30', 'ELECTRIC', 'kWh', 'Tour des Liondards', 'Etage 19', 600 ,now()),
+      ('31', 'ELECTRIC', 'kWh', 'Tour des Liondards', 'Etage 20', 600 ,now()),
+      ('32', 'ELECTRIC', 'kWh', 'Tour des Liondards', 'Etage 21', 600 ,now()),   
+      ('33', 'ELECTRIC', 'kWh', 'Tour des Liondards', 'Sous-sol 1', 600 ,now()),
+      ('34', 'ELECTRIC', 'kWh', 'Tour des Liondards', 'Sous-sol 2', 600 ,now()),         
+      ('35', 'ELECTRIC', 'kWh', 'Hôtel de la Région Auvergne', 'Accueil', 268 ,now()),   
+      ('36', 'ELECTRIC', 'kWh', 'Hôtel de la Région Auvergne', 'Premier étage', 1258 ,now()),
+      ('37', 'ELECTRIC', 'kWh', 'Hôtel de la Région Auvergne', 'Sous-sol', 3564 ,now()),   
+      ('38', 'ELECTRIC', 'kWh', 'Hôtel de la Région Auvergne', 'Salle réunion 1', 268 ,now()),   
+      ('39', 'ELECTRIC', 'kWh', 'Hôtel de la Région Auvergne', 'Salle réunion 2', 1258 ,now()),
+      ('40', 'ELECTRIC', 'kWh', 'Hôtel de la Région Auvergne', 'Salle réunion 3', 3564 ,now()),   
+      ('41', 'ELECTRIC', 'kWh', 'Hôtel de la Région Auvergne', 'Salle réunion 4', 268 ,now()),   
+      ('42', 'ELECTRIC', 'kWh', 'Hôtel de la Région Auvergne', 'Salle réunion 5', 1258 ,now()),
+      ('43', 'ELECTRIC', 'kWh', 'Hôtel de la Région Auvergne', 'Salle réunion 6', 3564 ,now()),   
+      ('44', 'ELECTRIC', 'kWh', 'Hôtel de la Région Auvergne', 'Bureau 1', 268 ,now()),   
+      ('45', 'ELECTRIC', 'kWh', 'Hôtel de la Région Auvergne', 'Bureau 2', 1258 ,now()),
+      ('46', 'ELECTRIC', 'kWh', 'Hôtel de la Région Auvergne', 'Bureau 3', 3564 ,now()),                     
+      ('47', 'ELECTRIC', 'kWh', 'Centre mondial de technologie Michelin de Ladoux', 'Sous-sol', 7651 ,now()),
+      ('48', 'ELECTRIC', 'kWh', 'Centre mondial de technologie Michelin de Ladoux', 'Level1', 7651 ,now()),
+      ('49', 'ELECTRIC', 'kWh', 'Centre mondial de technologie Michelin de Ladoux', 'Level2', 7651 ,now()),
+      ('50', 'ELECTRIC', 'kWh', 'Centre mondial de technologie Michelin de Ladoux', 'Level3', 7651 ,now());
+
 EOSQL

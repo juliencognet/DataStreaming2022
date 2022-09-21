@@ -10,9 +10,9 @@ CREATE TABLE KafkaTable (
   proctime as PROCTIME()
 ) WITH (
   'connector' = 'kafka',
-  'topic' = 'test-topic',
+  'topic' = 'input-meter-values',
   'properties.bootstrap.servers' = 'kafka:9092',
-  'properties.group.id' = 'testGroup',
+  'properties.group.id' = 'consumer-group-table-api',
   'scan.startup.mode' = 'earliest-offset',
   'format' = 'json',
   'json.fail-on-missing-field' = 'false',
@@ -21,7 +21,12 @@ CREATE TABLE KafkaTable (
 
 CREATE TABLE MeterReference (
   ID_METER STRING,
-  METER_NAME STRING
+  MEASURE_TYPE STRING, 
+  UNIT STRING, 
+  BUILDING STRING, 
+  ROOM STRING, 
+  AREA INTEGER, 
+  LAST_UPDATE timestamp 
 ) WITH (
    'connector' = 'jdbc',
    'url' = 'jdbc:postgresql://datareference:5432/referencedata',
@@ -31,20 +36,26 @@ CREATE TABLE MeterReference (
 );
 
 CREATE TABLE MeterWithDataReference (
-  `meterId` STRING PRIMARY KEY,
+  meterId STRING,
   corrMeterValue DOUBLE,
-  `meterName` STRING,
-  ts TIMESTAMP
+  measureType STRING, 
+  unit STRING, 
+  building STRING, 
+  room STRING, 
+  area INTEGER,
+  ts TIMESTAMP,
+  PRIMARY KEY (building) NOT ENFORCED
 ) WITH (
   'connector' = 'upsert-kafka',
-  'topic' = 'meter-with-reference-data-topic',
+  'topic' = 'output-meter-values-with-reference-data-from-table-api',
   'properties.bootstrap.servers' = 'kafka:9092',
-  'properties.group.id' = 'testGroup',
-  'key.format' = 'json',
+  'properties.group.id' = 'consumer-group-table-api',
+  'properties.num.partitions' = '10',
+  'key.format' = 'raw',
   'value.format' = 'json'
 );
 
 INSERT INTO MeterWithDataReference
-SELECT k.meterId, k.corrMeterValue, r.METER_NAME, k.ts
+SELECT k.meterId, k.corrMeterValue, r.MEASURE_TYPE as measureType, r.UNIT as unit, r.BUILDING as building, r.ROOM as room, r.AREA as area, k.ts
 FROM KafkaTable k 
 LEFT JOIN MeterReference r ON k.meterId = r.ID_METER;
