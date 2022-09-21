@@ -1,16 +1,18 @@
 # DataStreaming2022
 
-Projet prêt à l'emploi permettant d'illustrer le talk "Edgar Alan Poe appliqué au data streaming - Toutes sont bonnes ou mauvaises par comparaison".
+Projet prêt à l'emploi permettant d'illustrer le talk "Edgar Alan Poe appliqué au data streaming - Toutes choses sont bonnes ou mauvaises par comparaison".
 
 Il se présente sous la forme d'un projet docker-compose qui lance plusieurs comopsants:
 - Une base de données postgres (datareference) contenant un référentiel de données (liste de compteurs)
 - Un bus kafka et son zookeeper associé
-- L'utilitaire web kafdrop permettant de visionner le contenu du bus kafka
+- L'utilitaire web AKHQ permettant de visionner le contenu des topics kafka
 - Apache Nifi contenant 2 process groups :
   - l'un permettant de générer des données
   - l'autre permettant d'implémenter un change data capture
 - Un registre Nifi (nifi-registry)
-- Un cluster Apache Flink qui implémente un traitement métier simple
+- Un cluster Apache Flink qui implémente un traitement métier simple (jointure du flux de données compteur avec les données de référence) de 2 manières différentes
+  - via l'API Java Stream
+  - via Flink SQL (API table) 
 
 
 Pour lancer le projet:
