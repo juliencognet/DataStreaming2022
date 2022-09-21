@@ -50,7 +50,6 @@ CREATE TABLE MeterWithDataReference (
   'topic' = 'output-meter-values-with-reference-data-from-table-api',
   'properties.bootstrap.servers' = 'kafka:9092',
   'properties.group.id' = 'consumer-group-table-api',
-  'properties.num.partitions' = '10',
   'key.format' = 'raw',
   'value.format' = 'json'
 );

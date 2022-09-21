@@ -37,35 +37,35 @@ import org.apache.flink.streaming.api.datastream.SingleOutputStreamOperator;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 
 /**
- * Skeleton for a Flink DataStream Job.
+ * Flink DataStream Job.
  *
  * <p>For a tutorial how to write a Flink application, check the
  * tutorials and examples on the <a href="https://flink.apache.org">Flink Website</a>.
  *
  * <p>To package your application into a JAR file for execution, run
  * 'mvn clean package' on the command line.
- *
- * <p>If you change the name of the main class (with the public static void main(String[] args))
- * method, change the respective entry in the POM.xml file (simply search for 'mainClass').
  */
 public class DataStreamJob {
+
+	String brokers = "kafka:9092";
+	ObjectMapper objectMapper = new ObjectMapper();
 
 	public static void main(String[] args) throws Exception {
 		// Sets up the execution environment, which is the main entry point
 		// to building Flink applications.
 		final StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
 
-		String brokers = "kafka:9092";
-		ObjectMapper objectMapper = new ObjectMapper();
-
+		// Define Kafka sources and sink
 		KafkaSource<String> source = buildInputKafkaSource(brokers, "input-meter-values");
 		KafkaSource<String> changeDataCaptureSource = buildInputKafkaSource(brokers, "input-data-reference-changes");
 		KafkaSink<MeterValueWithReferenceData> sink = buildOutputKafkaSink(brokers, objectMapper);
 
+		// Define Reference Data Change Data Capture Stream
 		SingleOutputStreamOperator<Meter[]> streamChangeDataCaptureSource =
 				env.fromSource(changeDataCaptureSource, WatermarkStrategy.noWatermarks(), "CDC Kafka Source")
 						.map(new DeserializeMeter(objectMapper));
 
+		// Define Meter Values Stream (connect and join with reference data from CDC)
 		env.fromSource(source, WatermarkStrategy.noWatermarks(), "MeterValues Kafka Source")
 				.map(new DeserializeMeterValue(objectMapper))
 				.connect(streamChangeDataCaptureSource)
@@ -74,10 +74,11 @@ public class DataStreamJob {
 				.keyBy(MeterValueWithReferenceData::getBuilding)
 				.sinkTo(sink);
 
-		// Execute program, beginning computation.
+		// 10 automatic restarts (with delay of 1 seconds between each restart)
 		env.setRestartStrategy(RestartStrategies.fixedDelayRestart(10, 1000));
-		env.execute("Flink job to enrich meter value from data reference and output to Kafka");
-
+		
+		// Execute program, beginning computation.
+		env.execute("Flink job to enrich meter value with reference data and output to Kafka");
 	}
 
 	private static KafkaSink<MeterValueWithReferenceData> buildOutputKafkaSink(String brokers, ObjectMapper objectMapper) {

@@ -20,8 +20,21 @@ Pour lancer le projet:
 startup.sh
 ```
 
-- Ensuite, il faut paramétrer le registre nifi : http://nifi-registry:18080 
-- Importer les 2 process groupes de chargement de données et CDC.
+- Il est nécessaire ensuite de déployer le générateur de données et le Change Data Capture dans Nifi.
+- Accéder à la page d'administration de Nifi: https://localhost:8443/nifi/
+- Ensuite, il faut paramétrer le registre nifi. Pour cela, il faut aller dans le menu de Nifi (en haut à droite), puis sélectionner "Controller settings", puis l'onglet "Registry clients". Ajouter un registry avec le bouton "+", saisir un nom tel que "Nifi Registry" puis dans URL ajouter l'adresse suivante: http://nifi-registry:18080 
+- Recharger la page d'administration de Nifi (F5).
+- Ajouter un Process Group (4ème icone du menu)
+- Sélectionner "Import from registry"
+- Choisir la version la plus récente du flow "SampleDataCreator"
+- Clic droit sur le process group juste déployé
+- Choisir Configure
+- Dans l'onglet Controller Services, paramétrer le pool DBCP en cliquant sur l'icone d'administration (engrenages)
+- Dans l'onglet Properties du Detail du Controller Service, saisir le mot de passe de l'utilisateur (password)
+- Valider puis activer (Enable) le service controlleur.
+- Démarrer tous les processeurs 
+- Le générateur de données est alors démarré ainsi que la détection de changement.
+- Il est alors possible de visualiser les données générées et transformées dans AKHQ (http://localhost:8090/ui/docker-kafka-server/topic)
 
 Pour arrêter les composants:
 ----
@@ -32,6 +45,6 @@ stop.sh
 IHM d'administration
 ----
 - Administration Nifi: https://localhost:8443/nifi/
-- KafDrop: http://localhost:9000/
+- Visualisation des topics Kafka: http://localhost:8090/ui/docker-kafka-server/topic 
 - Flink: http://localhost:8085/
-- Kibana: http://localhost:5601/ (bien penser à ajouter le remote cluster elasticsearch:5300)
+
