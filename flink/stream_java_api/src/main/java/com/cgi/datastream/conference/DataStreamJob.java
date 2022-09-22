@@ -47,8 +47,8 @@ import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
  */
 public class DataStreamJob {
 
-	String brokers = "kafka:9092";
-	ObjectMapper objectMapper = new ObjectMapper();
+	static String brokers = "kafka:9092";
+	static ObjectMapper objectMapper = new ObjectMapper();
 
 	public static void main(String[] args) throws Exception {
 		// Sets up the execution environment, which is the main entry point

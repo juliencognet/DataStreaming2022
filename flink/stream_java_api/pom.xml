@@ -21,11 +21,11 @@ under the License.
 	<modelVersion>4.0.0</modelVersion>
 
 	<groupId>com.cgi.datastream.conference</groupId>
-	<artifactId>flinkdemo</artifactId>
+	<artifactId>flink-stream-api-demo</artifactId>
 	<version>1.0-SNAPSHOT</version>
 	<packaging>jar</packaging>
 
-	<name>Data streaming Flink simple Kafka demo</name>
+	<name>Flink stream api simple demo with Kafka</name>
 
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>

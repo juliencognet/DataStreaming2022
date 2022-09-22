@@ -93,7 +93,7 @@ services:
     networks:
       - app-tier    
     volumes:
-      - "./flink/dataStreamJavaApiDemo/target:/home/jars"
+      - "./flink/stream_java_api/target:/home/jars"
       - ./flink/table_api:/usr/local/flink
     environment:
       - |
