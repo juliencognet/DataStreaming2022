@@ -69,6 +69,7 @@ services:
     environment:
       - "SINGLE_USER_CREDENTIALS_USERNAME=admin"
       - "SINGLE_USER_CREDENTIALS_PASSWORD=ctsBtRBKHRAx69EqUghvvgEvjnaLjFEB"
+      - "NIFI_WEB_PROXY_HOST=nifi:8443"
     networks:
       - app-tier
 
@@ -93,8 +94,8 @@ services:
     networks:
       - app-tier    
     volumes:
-      - "./flink/stream_java_api/target:/home/jars"
-      - ./flink/table_api:/usr/local/flink
+      - "./flink/stream_java_api/target:/usr/local/flink/java_stream_api"
+      - ./flink/table_api:/usr/local/flink/table_api
     environment:
       - |
         FLINK_PROPERTIES=
