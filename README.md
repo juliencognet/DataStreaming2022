@@ -1,6 +1,6 @@
 # DataStreaming2022
 
-Projet prêt à l'emploi permettant d'illustrer le talk "Edgar Alan Poe appliqué au data streaming - Toutes choses sont bonnes ou mauvaises par comparaison".
+Projet prêt à l'emploi permettant d'illustrer le talk "Edgar Alan Poe appliqué au data streaming - Toutes choses sont bonnes ou mauvaises par comparaison" de Jean-Michel DURAND et Julien COGNET.
 
 Il se présente sous la forme d'un projet docker-compose qui lance plusieurs comopsants:
 - Une base de données postgres (datareference) contenant un référentiel de données (liste de compteurs)
@@ -13,13 +13,14 @@ Il se présente sous la forme d'un projet docker-compose qui lance plusieurs com
 - Un cluster Apache Flink qui implémente un traitement métier simple (jointure du flux de données compteur avec les données de référence) de 2 manières différentes
   - via l'API Java Stream
   - via Flink SQL (API table) 
+- 
 
 
 Pour lancer le projet:
 ----
 
 ```
-startup.sh
+bin/startup.bat
 ```
 
 - Il est nécessaire ensuite de déployer le générateur de données et le Change Data Capture dans Nifi.
@@ -41,12 +42,15 @@ startup.sh
 Pour arrêter les composants:
 ----
 ```
-stop.sh
+bin/stop.bat
 ```
 
 IHM d'administration
 ----
 - Administration Nifi: https://localhost:8443/nifi/
+- accès à Nifi Registry: http://localhost:18080/nifi-registry
 - Visualisation des topics Kafka: http://localhost:8090/ui/docker-kafka-server/topic 
 - Flink: http://localhost:8085/
+- Accès à InfluxDB: http://localhost:8086
+- Accès à Confluent Control Center: http://localhost:9021
 

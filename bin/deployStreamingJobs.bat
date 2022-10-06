@@ -3,8 +3,9 @@ echo -----------------------------------------
 echo -- Data Streaming Demo                 --
 echo -----------------------------------------
 echo -                                     
+cd /D "%~dp0"
 echo -- Building Flink Stream Java Api --
-cd flink/stream_java_api/
+cd ../flink/stream_java_api/
 call mvn clean install
 cd ../..
 

@@ -11,6 +11,12 @@ psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "$POSTGRES_DB" <<-E
         AREA integer, 
         LAST_UPDATE timestamp 
     );
+
+    CREATE TABLE METER_VALUES(
+        meterId varchar, 
+        meterValue varchar
+        meterTimestamp varchar);
+
     INSERT INTO METER(ID_METER, MEASURE_TYPE, UNIT, BUILDING, ROOM, AREA, LAST_UPDATE) 
       VALUES ('1', 'ELECTRIC', 'kWh', 'Imprimerie de la Banque de France', 'Accueil', 250 ,now()),
       ('2', 'ELECTRIC', 'kWh', 'Imprimerie de la Banque de France', 'Bureau Président BdF', 500 ,now()),
