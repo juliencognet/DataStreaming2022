@@ -1,0 +1,23 @@
+<!--
+    Par défaut logback va chercher le fichier logback-test.xml dans le classpath,
+    si non trouvé il cherche logback.xml (cf https://logback.qos.ch/manual/configuration.html)
+    Ce fichier ne sert qu'en local et pour les TUs
+    On exclue ce fichier lors de la génération du jar
+-->
+<configuration>
+
+    <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>%d{dd MMM yyyy HH:mm:ss.SSS} [%t] %-5level %logger{36} - %msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <root level="INFO">
+        <appender-ref ref="STDOUT"/>
+    </root>
+
+    <logger name="fr.cgi.datastream" level="trace" additivity="false">
+        <appender-ref ref="STDOUT"/>
+    </logger>
+
+</configuration>

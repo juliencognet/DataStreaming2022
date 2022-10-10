@@ -56,8 +56,8 @@ public class DataStreamJob {
 		final StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
 
 		// Define Kafka sources and sink
-		KafkaSource<String> source = buildInputKafkaSource(brokers, "input-meter-values");
-		KafkaSource<String> changeDataCaptureSource = buildInputKafkaSource(brokers, "input-data-reference-changes");
+		KafkaSource<String> source = buildInputKafkaSource(brokers, "T1-1-raw-data");
+		KafkaSource<String> changeDataCaptureSource = buildInputKafkaSource(brokers, "T1-2-reference-data");
 		KafkaSink<MeterValueWithReferenceData> sink = buildOutputKafkaSink(brokers, objectMapper);
 
 		// Define Reference Data Change Data Capture Stream
@@ -85,7 +85,7 @@ public class DataStreamJob {
 		KafkaSink<MeterValueWithReferenceData> sink = KafkaSink.<MeterValueWithReferenceData>builder()
 				.setBootstrapServers(brokers)
 				.setRecordSerializer(KafkaRecordSerializationSchema.<MeterValueWithReferenceData>builder()
-					.setTopic("output-meter-values-with-reference-data-from-stream-api")
+					.setTopic("T2-enriched-data-stream-api")
 					.setValueSerializationSchema(new MeterValueWithReferenceDataValueSerializer(objectMapper))
 					.setKeySerializationSchema(new MeterValueWithReferenceDataKeySerializer(objectMapper))
 					.build()

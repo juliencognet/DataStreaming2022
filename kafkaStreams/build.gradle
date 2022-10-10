@@ -1,0 +1,128 @@
+buildscript {
+    ext {
+        appVersion = "0.0.5"
+    }
+}
+
+plugins {
+    id "application"
+    id "idea"
+    id 'maven-publish'
+    id "net.ltgt.apt" version "0.15"
+    id "org.sonarqube" version "3.3"
+    id "jacoco"
+    id "org.hidetake.ssh" version "2.10.1"
+}
+
+group = 'fr.cgi'
+sourceCompatibility = 11
+targetCompatibility = 11
+
+dependencies {
+    /* Logging */
+    implementation 'ch.qos.logback:logback-classic:1.2.10'
+
+    /* Kafka */
+    implementation "org.apache.kafka:kafka-streams:3.1.0"
+
+    /* Lombok */
+    implementation 'org.projectlombok:lombok:1.18.22'
+    compileOnly 'org.projectlombok:lombok:1.18.22'
+    annotationProcessor 'org.projectlombok:lombok:1.18.22'
+
+    /* Jackson */
+    implementation "com.fasterxml.jackson.core:jackson-databind:2.13.1"
+
+    /* Commons */
+    implementation "org.apache.commons:commons-lang3:3.12.0"
+    implementation 'org.apache.commons:commons-collections4:4.4'
+    implementation "com.google.guava:guava:31.0.1-jre"
+
+    /* Test */
+    testImplementation "org.apache.kafka:kafka-streams-test-utils:2.8.1"
+    testImplementation "org.junit.jupiter:junit-jupiter-api:5.8.2"
+    testImplementation "org.junit.jupiter:junit-jupiter-params:5.8.2"
+    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.8.2'
+    testImplementation 'org.hamcrest:hamcrest:2.2'
+    testImplementation 'org.mockito:mockito-core:4.3.1'
+    testImplementation 'org.assertj:assertj-core:3.21.0'
+}
+
+test {
+    useJUnitPlatform()
+    systemProperties['user.timezone'] = "UTC"
+    jacoco
+    finalizedBy jacocoTestReport
+    testLogging {
+        outputs.upToDateWhen { false }
+        showStandardStreams = true
+        exceptionFormat = "full"
+    }
+}
+
+// Désactivation des tasks inutiles et couteuses en temps et espace disque
+distTar.enabled(false)
+distZip.enabled(false)
+
+application {
+    mainClass = "fr.cgi.datastream.Application"
+}
+
+jar {
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+
+    from {
+        configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) }
+    }
+    manifest {
+        attributes(
+                "Main-Class": "fr.cgi.datastream"
+        )
+    }
+
+    // Pour que le jar ne contienne que logback.xml on exclu le logback-test.xml qui ne sert
+    // qu'au consoleappender
+    exclude('logback-test.xml')
+    // Exclusion du fichier de conf local
+    exclude('application-local.yml')
+}
+
+/************************************* REPOS SETUP *************************************************/
+
+repositories {
+
+        maven {
+            allowInsecureProtocol = true
+            url "http://172.17.3.66:8530/repository/maven-public"
+        }
+}
+
+// juste pour avoir un peu de debug des fois
+task showRepos {
+    doLast {
+        repositories.each {
+            println "repository: ${it.name} ('${it.url}')"
+        }
+    }
+}
+
+/************************************* Jacoco / Sonar *************************************************/
+
+jacoco {
+    toolVersion = "0.8.7"
+    reportsDirectory = layout.buildDirectory.dir('customJacocoReportDir')
+}
+
+jacocoTestReport {
+    dependsOn test
+    reports {
+        xml.required = true
+        csv.required = false
+        html.outputLocation = layout.buildDirectory.dir('jacocoHtml')
+    }
+}
+
+project.tasks["sonarqube"].dependsOn(jacocoTestReport)
+
+
+

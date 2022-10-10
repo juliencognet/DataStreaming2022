@@ -12,26 +12,59 @@ services:
       - app-tier
     environment:
       - "ALLOW_ANONYMOUS_LOGIN=yes"
-
   kafka:
-    image: 'bitnami/kafka:3.0'
+    image: confluentinc/cp-kafka:5.4.10
+    hostname: kafka
     container_name: kafka
-    ports:
-      - '9092:9092'
-      - '9093:9093'
+    networks:
+      - app-tier
     depends_on:
-      - zookeeper      
+      - zookeeper
+    ports:
+      - "29092:29092"
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: 'zookeeper:2181'
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092,PLAINTEXT_HOST://localhost:29092
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+
+
+  ksqldb-server:
+    image: confluentinc/ksqldb-server:0.28.2
+    hostname: ksqldb-server
+    container_name: ksqldb-server
+    depends_on:
+      - kafka
+    ports:
+      - "8088:8088"
     networks:
       - app-tier
     environment:
-      - "ALLOW_PLAINTEXT_LISTENER=yes"
-      - "KAFKA_CFG_LISTENERS=PLAINTEXT://:9092"
-      - "KAFKA_CFG_ADVERTISED_LISTENERS=PLAINTEXT://kafka:9092"
-      - "KAFKA_CFG_ZOOKEEPER_CONNECT=zookeeper:2181"
+      KSQL_LISTENERS: http://0.0.0.0:8088
+      KSQL_BOOTSTRAP_SERVERS: kafka:9092
+      KSQL_KSQL_LOGGING_PROCESSING_STREAM_AUTO_CREATE: "true"
+      KSQL_KSQL_LOGGING_PROCESSING_TOPIC_AUTO_CREATE: "true"
+      KSQL_KSQL_CONNECT_WORKER_CONFIG: "/connect/connect.properties"
+    volumes:
+      - ./ksqldb/connect.properties:/connect/connect.properties
 
-  kafka-akhq:
+  ksqldb-cli:
+    image: confluentinc/ksqldb-cli:0.28.2
+    container_name: ksqldb-cli
+    depends_on:
+      - kafka
+      - ksqldb-server
+    networks:
+      - app-tier
+    entrypoint: /bin/sh
+    tty: true
+  akhq:
     image: tchiotludo/akhq
-    container_name: kafka-akhq
+    container_name: akhq
     networks:
       - app-tier    
     environment:
@@ -71,7 +104,6 @@ services:
     environment:
       - "SINGLE_USER_CREDENTIALS_USERNAME=admin"
       - "SINGLE_USER_CREDENTIALS_PASSWORD=ctsBtRBKHRAx69EqUghvvgEvjnaLjFEB"
-      - "NIFI_WEB_PROXY_HOST=nifi:8443"
     networks:
       - app-tier
 
@@ -96,7 +128,7 @@ services:
     networks:
       - app-tier    
     volumes:
-      - "./flink/stream_java_api/target:/usr/local/flink/java_stream_api"
+      - "./flink/stream_java_api/target:/home/jars"
       - ./flink/table_api:/usr/local/flink/table_api
     environment:
       - |
@@ -112,43 +144,13 @@ services:
     container_name: flink-taskmanager
     scale: 1
     networks:
-      - app-tier    
+      - app-tier
     environment:
       - |
         FLINK_PROPERTIES=
         jobmanager.rpc.address: flink-jobmanager
         taskmanager.numberOfTaskSlots: 10
         
-  ksqldb-server:
-    image: confluentinc/ksqldb-server:0.27.1
-    hostname: ksqldb-server
-    container_name: ksqldb-server
-    depends_on:
-      - kafka
-    ports:
-      - "8088:8088"
-    networks:
-      - app-tier
-    environment:
-      KSQL_LISTENERS: http://0.0.0.0:8088
-      KSQL_BOOTSTRAP_SERVERS: kafka:9092
-      KSQL_KSQL_LOGGING_PROCESSING_STREAM_AUTO_CREATE: "true"
-      KSQL_KSQL_LOGGING_PROCESSING_TOPIC_AUTO_CREATE: "true"
-      KSQL_KSQL_CONNECT_WORKER_CONFIG: "/connect/connect.properties"
-    volumes:
-      - ./ksqldb/connect.properties:/connect/connect.properties
-
-  ksqldb-client:
-    image: confluentinc/ksqldb-cli:0.27.1
-    container_name: ksqldb-client
-    depends_on:
-      - kafka
-      - ksqldb-server
-    networks:
-      - app-tier
-    entrypoint: /bin/sh
-    tty: true
-    
   influxdb:
     image: influxdb:2.1.0-alpine
     container_name: influxdb
@@ -160,40 +162,41 @@ services:
       DOCKER_INFLUXDB_INIT_PASSWORD: this_is_my_long_password
       DOCKER_INFLUXDB_INIT_ORG: volcamp
       DOCKER_INFLUXDB_INIT_BUCKET: volcamp
-      DOCKER_INFLUXDB_INIT_ADMIN_TOKEN: some_very_secret_token
+      DOCKER_INFLUXDB_INIT_ADMIN_TOKEN: LbL3syu4EXiQ5Z8Fkscs6TbLq7jC8gGo2HdRqH1vM32llA_1xWaVwIAzPHKoERGynxIEzsWMREQPmTDIcfYskg==
     ports:
       - "8086:8086"
 
   telegraf:
     image: telegraf:1.21.1-alpine
+    container_name: telegraf
     networks:
       - app-tier
-    container_name: influxdb-telegraf
     environment:
-      DOCKER_INFLUXDB_INIT_ADMIN_TOKEN: some_very_secret_token
+      DOCKER_INFLUXDB_INIT_ADMIN_TOKEN: LbL3syu4EXiQ5Z8Fkscs6TbLq7jC8gGo2HdRqH1vM32llA_1xWaVwIAzPHKoERGynxIEzsWMREQPmTDIcfYskg==
       DOCKER_INFLUXDB_INIT_ORG: volcamp
       DOCKER_INFLUXDB_INIT_BUCKET: volcamp
     volumes:
       - ./telegraf/telegraf.conf:/etc/telegraf/telegraf.conf
     depends_on:
       - influxdb
-      - kafka      
+      - kafka
       
   control-center:
     image: confluentinc/cp-enterprise-control-center:5.4.10
-    container_name: kafka-control-center
+    container_name: control-center
     networks:
       - app-tier
     depends_on:
       - zookeeper
       - kafka
+      - ksqldb-server
     ports:
       - "9021:9021"
     environment:
       CONTROL_CENTER_BOOTSTRAP_SERVERS: 'kafka:9092'
       CONTROL_CENTER_ZOOKEEPER_CONNECT: 'zookeeper:2181'
-      CONTROL_CENTER_KSQL_URL: "http://ksqldb:8088"
-      CONTROL_CENTER_KSQL_ADVERTISED_URL: "http://localhost:8088"
+      CONTROL_CENTER_KSQL_URL: "http://ksqldb-server:8088"
+      CONTROL_CENTER_KSQL_ADVERTISED_URL: "http://ksqldb-server:8088"
       CONFLUENT_METRICS_TOPIC_REPLICATION: 1
       CONTROL_CENTER_REPLICATION_FACTOR: 1
       CONTROL_CENTER_COMMAND_TOPIC_REPLICATION: 1

@@ -10,7 +10,7 @@ CREATE TABLE KafkaTable (
   proctime as PROCTIME()
 ) WITH (
   'connector' = 'kafka',
-  'topic' = 'input-meter-values',
+  'topic' = 'T1-1-raw-data',
   'properties.bootstrap.servers' = 'kafka:9092',
   'properties.group.id' = 'consumer-group-table-api',
   'scan.startup.mode' = 'earliest-offset',
@@ -47,7 +47,7 @@ CREATE TABLE MeterWithDataReference (
   PRIMARY KEY (building) NOT ENFORCED
 ) WITH (
   'connector' = 'upsert-kafka',
-  'topic' = 'output-meter-values-with-reference-data-from-table-api',
+  'topic' = 'T2-enriched-data',
   'properties.bootstrap.servers' = 'kafka:9092',
   'properties.group.id' = 'consumer-group-table-api',
   'key.format' = 'raw',
