@@ -38,7 +38,7 @@ bin/startup.bat
 - Démarrer tous les processeurs 
 - Le générateur de données est alors démarré ainsi que la détection de changement.
 - Il est alors possible de visualiser les données générées et transformées dans AKHQ (http://localhost:8090/ui/docker-kafka-server/topic)
-- Pour faciliter la visulation des données générées, vous pouvez exécutez la commande ci-dessous puis copier les requêtes SQL présentes dans le dossier ksqldb-cli/command_ksql.sql
+- Pour faciliter la visulation des données générées, vous pouvez exécuter la commande ci-dessous puis copier les requêtes SQL présentes dans le dossier ksqldb-cli/command_ksql.sql
 
 ```
  docker exec -it ksqldb-cli ksql http://ksqldb-server:8088
