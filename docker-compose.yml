@@ -62,6 +62,9 @@ services:
       - app-tier
     entrypoint: /bin/sh
     tty: true
+    volumes:
+      - "./ksqldb-cli:/tmp/ksqldb"
+
   akhq:
     image: tchiotludo/akhq
     container_name: akhq

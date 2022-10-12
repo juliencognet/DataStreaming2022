@@ -126,13 +126,6 @@ under the License.
 							<goal>shade</goal>
 						</goals>
 						<configuration>
-							<artifactSet>
-								<excludes>
-									<exclude>com.google.code.findbugs:jsr305</exclude>
-									<exclude>org.slf4j:*</exclude>
-									<exclude>org.apache.logging.log4j:*</exclude>
-								</excludes>
-							</artifactSet>
 							<filters>
 								<filter>
 									<!-- Do not copy the signatures in the META-INF folder.
