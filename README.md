@@ -56,6 +56,5 @@ IHM d'administration
 - accès à Nifi Registry: http://localhost:18080/nifi-registry
 - Visualisation des topics Kafka: http://localhost:8090/ui/docker-kafka-server/topic 
 - Flink: http://localhost:8085/
-- Accès à InfluxDB: http://localhost:8086
-- Accès à Confluent Control Center: http://localhost:9021
+- Accès à InfluxDB et au dashboard associé: http://localhost:8086
 
