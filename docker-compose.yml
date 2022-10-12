@@ -150,7 +150,18 @@ services:
         FLINK_PROPERTIES=
         jobmanager.rpc.address: flink-jobmanager
         taskmanager.numberOfTaskSlots: 10
-        
+
+ # kafka-streams:
+ #   image: adoptopenjdk/openjdk11
+ #   depends_on:
+ #     - kafka
+ #   container_name: kafkaStreams
+ #   volumes: 
+ #     - "./kafkaStreams/target:/tmp"
+ #   command: java -jar /tmp/kafka-stream-demo-1.0-SNAPSHOT.jar
+ #   networks:
+ #     - app-tier
+    
   influxdb:
     image: influxdb:2.1.0-alpine
     container_name: influxdb
@@ -181,29 +192,29 @@ services:
       - influxdb
       - kafka
       
-  control-center:
-    image: confluentinc/cp-enterprise-control-center:5.4.10
-    container_name: control-center
-    networks:
-      - app-tier
-    depends_on:
-      - zookeeper
-      - kafka
-      - ksqldb-server
-    ports:
-      - "9021:9021"
-    environment:
-      CONTROL_CENTER_BOOTSTRAP_SERVERS: 'kafka:9092'
-      CONTROL_CENTER_ZOOKEEPER_CONNECT: 'zookeeper:2181'
-      CONTROL_CENTER_KSQL_URL: "http://ksqldb-server:8088"
-      CONTROL_CENTER_KSQL_ADVERTISED_URL: "http://ksqldb-server:8088"
-      CONFLUENT_METRICS_TOPIC_REPLICATION: 1
-      CONTROL_CENTER_REPLICATION_FACTOR: 1
-      CONTROL_CENTER_COMMAND_TOPIC_REPLICATION: 1
-      CONTROL_CENTER_MONITORING_INTERCEPTOR_TOPIC_REPLICATION: 1
-      CONTROL_CENTER_INTERNAL_TOPICS_PARTITIONS: 1
-      CONTROL_CENTER_INTERNAL_TOPICS_REPLICATION: 1
-      CONTROL_CENTER_MONITORING_INTERCEPTOR_TOPIC_PARTITIONS: 1
-      CONTROL_CENTER_STREAMS_NUM_STREAM_THREADS: 1
-      CONTROL_CENTER_STREAMS_CACHE_MAX_BYTES_BUFFERING: 104857600
-      CONTROL_CENTER_DEPRECATED_VIEWS_ENABLE: "true"
+# control-center:
+#   image: confluentinc/cp-enterprise-control-center:5.4.10
+#   container_name: control-center
+#   networks:
+#     - app-tier
+#   depends_on:
+#     - zookeeper
+#     - kafka
+#     - ksqldb-server
+#   ports:
+#     - "9021:9021"
+#   environment:
+#     CONTROL_CENTER_BOOTSTRAP_SERVERS: 'kafka:9092'
+#     CONTROL_CENTER_ZOOKEEPER_CONNECT: 'zookeeper:2181'
+#     CONTROL_CENTER_KSQL_URL: "http://ksqldb-server:8088"
+#     CONTROL_CENTER_KSQL_ADVERTISED_URL: "http://ksqldb-server:8088"
+#     CONFLUENT_METRICS_TOPIC_REPLICATION: 1
+#     CONTROL_CENTER_REPLICATION_FACTOR: 1
+#     CONTROL_CENTER_COMMAND_TOPIC_REPLICATION: 1
+#     CONTROL_CENTER_MONITORING_INTERCEPTOR_TOPIC_REPLICATION: 1
+#     CONTROL_CENTER_INTERNAL_TOPICS_PARTITIONS: 1
+#     CONTROL_CENTER_INTERNAL_TOPICS_REPLICATION: 1
+#     CONTROL_CENTER_MONITORING_INTERCEPTOR_TOPIC_PARTITIONS: 1
+#     CONTROL_CENTER_STREAMS_NUM_STREAM_THREADS: 1
+#     CONTROL_CENTER_STREAMS_CACHE_MAX_BYTES_BUFFERING: 104857600
+#     CONTROL_CENTER_DEPRECATED_VIEWS_ENABLE: "true"

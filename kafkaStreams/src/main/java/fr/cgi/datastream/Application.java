@@ -39,7 +39,6 @@ public class Application {
                 .aggregate(BuildingAgregateDTO::new, Application::compute, Materialized.with(Serdes.String(), buildingAgregateSerdes))
                 .toStream()
                 .map((Windowed<String> key, BuildingAgregateDTO buildingDTO) -> new KeyValue<>(key.key(),buildingDTO))
-                .peek(log::info)
                 .to("T3-computed-data", Produced.with(Serdes.String(), buildingAgregateSerdes));
 
         Topology build = builder.build();
@@ -54,7 +53,7 @@ public class Application {
         agg.setBuilding(key);
         Float safeArea = value.getArea() == null || value.getArea() == 0 ? 1f : value.getArea();
         Float safeValue = value.getCorrMeterValue()== null  ? 0f : value.getArea();
-        Float newValue = (safeValue/ safeArea)*1000;
+        Float newValue = (safeValue/ safeArea);
         agg.setResult(agg.getResult() + newValue);
         return agg;
     }
