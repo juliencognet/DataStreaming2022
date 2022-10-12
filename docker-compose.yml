@@ -128,7 +128,7 @@ services:
     networks:
       - app-tier    
     volumes:
-      - "./flink/stream_java_api/target:/home/jars"
+      - "./flink/stream_java_api/target:/usr/local/flink/stream_java_api"
       - ./flink/table_api:/usr/local/flink/table_api
     environment:
       - |
