@@ -2,6 +2,8 @@
 
 Projet prêt à l'emploi permettant d'illustrer le talk "Edgar Alan Poe appliqué au data streaming - Toutes choses sont bonnes ou mauvaises par comparaison" de Jean-Michel DURAND et Julien COGNET.
 
+Les slides sont disponibles à l'adresse suivante: [https://www.slideshare.net/JulienCognet/alan-poe-appliqu-au-data-streaming-toutes-choses-sont-bonnes-ou-mauvaises-par-comparaison]
+
 Il se présente sous la forme d'un projet docker-compose qui lance plusieurs comopsants:
 - Une base de données postgres (datareference) contenant un référentiel de données (liste de compteurs)
 - Un bus kafka et son zookeeper associé
